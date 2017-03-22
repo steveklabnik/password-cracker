@@ -1,8 +1,12 @@
 extern crate rayon;
 use rayon::prelude::*;
 
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::fs::File;
+
 fn main() {
-    let plaintext = "abcdefghijklmnopqrstuvwxyz";
+    let plaintext = "hello";
     let cyphertext = rotate(plaintext, 8);
 
     println!("plaintext: {}", plaintext);
@@ -16,8 +20,17 @@ fn main() {
         rotated.push(rotate(&cyphertext, amount));
     }
 
-    let result = rotated.par_iter().enumerate().find(|&(_, text)| {
-        text == "abcdefghijklmnopqrstuvwxyz"
+    let result = rotated.par_iter().enumerate().find_any(|&(_, text)| {
+        let dictionary = File::open("dictionary.txt").unwrap();
+        let dictionary = BufReader::new(dictionary);
+
+        for line in dictionary.lines() { 
+            if text == line.unwrap().trim() {
+                return true;
+            }
+        }
+
+        false
     });
 
     if let Some((index, _)) = result {
